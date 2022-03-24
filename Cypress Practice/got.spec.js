@@ -1,7 +1,7 @@
 
 describe("characters section", () => {    
 
-    it("Test POST new character", () => { 
+    it.only("Test POST new character", () => { 
         const uniqueSeed = Date.now().toString();       
         cy.request({
             method: 'POST',
@@ -17,13 +17,32 @@ describe("characters section", () => {
         }).then(async(response) => { 
             await expect(response.status).to.eq(200)
             
-            cy.viewport(1920,1080);
+            cy.viewport(1080,1080); //depende de que tamano tenga anda bien o mal. Si comento esta linea (con 1920x1080) los 3 personajes del medio (jon sansa arya) no aparecen. Capaz es un bug nose.
             cy.visit("https://dsternlicht.github.io/RESTool/#/characters?search=")
-            cy.scrollTo('bottom') 
+
+            cy.get('p.pagination-state').invoke('text').then(($text) => { //hago esto para guardar la catnt de items del 'showing x items'. y desp usarlo para esperar a que los encuentre
+                var totalItems = $text.split(' ')[1]
+                cy.wrap(totalItems).as('numberOfCharacters')
+            })
+
+            // cy.scrollTo('bottom') 
+            // cy.wait(1000)
+            // cy.scrollTo('bottom') 
+            // cy.wait(1000)
+            // cy.scrollTo('bottom') 
+            // cy.wait(1000)
             
             cy.log("name created :"+ response.body.name)
             
-            // cy.get('div>div:nth-child(3)>span').should('have.length.greaterThan',7)  //lo hace para esperar que cargue los personajes que estan siempre                                                    
+            // COMO HAGO PARA QUE SCROLEE HASTA QUE YA APAREZCAN TODOS LOS numberOfCharacters ??? 
+            
+            // cy.customCommand().should('have.length', 10)
+
+            // cy.get('div>div:nth-child(3)>span').should('have.length', '@numberOfCharacters')  //lo hace para esperar que cargue los personajes que estan siempre  
+            // cy.get('div>div:nth-child(3)>span', {timeout:10000}).should( function (namesArray) { //hay alguna diferencia entre poner: namesArray o $namesArray ???
+            //     expect(namesArray).to.have.length(this.numberOfCharacters)
+            // })                                     
+
             cy.get('div>div:nth-child(3)>span').each(($el, index, $lis) => { 
                 cy.log($el.text())               
                 if ($el.text() == response.body.name) {
@@ -34,8 +53,6 @@ describe("characters section", () => {
                 expect($lis).to.have.length.greaterThan(1)         
             })
 
-            cy.wait(3000) //en vez de esto podria ser algo dinamico. O tocar lo que no carga en cypress y poner un should de que no exista esa clase o lo q sea
-            
             cy.request({
                 method: 'DELETE',
                 url: 'https://restool-sample-app.herokuapp.com/api/character/' + response.body.id            
@@ -80,7 +97,7 @@ describe("employees section", () => {
         cy.request({
             method: 'POST',
             url: 'https://restool-sample-app.herokuapp.com/api/employee',
-            form:true,
+            form: true,
             body:{
                 "name": 'santi '+ uniqueSeed,
                 "jobTitle":"A Knows nothing dude.",
@@ -112,7 +129,7 @@ describe("employees section", () => {
                 expect($lis).to.have.length.greaterThan(1)             
             })        
             
-            cy.wait(1000)    
+            // cy.wait(1000)    
             
             cy.request({
                 method: 'DELETE',
@@ -121,8 +138,8 @@ describe("employees section", () => {
                 expect(response.status).to.eq(200)        
             })   
 
-            cy.reload()
-            cy.wait(1000)
+            cy.reload().get('tbody') //hago el get para que haga retry hasta que aparezca el tbody y así no hago el wait de abajo.
+            // cy.wait(1000)
             
             cy.get('table > tbody > tr').should('not.contain', 'santi '+ uniqueSeed) //HAY ALGUNA MANERA DE NO HACERLO ASI POR SEPARADO???
             cy.get('table > tbody > tr').should('not.contain', response.body.id) //PQ ESTOY HACIENDO DOS VECES EL MISMO GET, MEDIO AL PEDO Y PIERDO TIEMPO.
@@ -136,7 +153,7 @@ describe("employees section", () => {
             cy.request({
                 method: 'GET',
                 url: 'https://restool-sample-app.herokuapp.com/api/employee',
-                form:true           
+                form: true           
             }).then((response) => { 
                 expect(response.status).to.eq(200)
                 expect(response.body.items).to.not.be.null 
@@ -269,7 +286,7 @@ describe('employees section 2 - PARA EL PUT', () => { //opcion con describe apar
         cy.request({
             method: 'GET',
             url: 'https://restool-sample-app.herokuapp.com/api/employee',
-            form:true           
+            form: true           
         }).then((response) => { 
             expect(response.status).to.eq(200)
             expect(response.body.items).to.not.be.null
@@ -291,11 +308,11 @@ describe('employees section 2 - PARA EL PUT', () => { //opcion con describe apar
         cy.request({
             method: 'PUT',
             url: 'https://restool-sample-app.herokuapp.com/api/employee/' + this.id1,
-            form:true,
+            form: true,
             body:{
                 "name": 'santi '+ uniqueSeed,
                 "jobTitle":"RESTool creator nooooo 😎",
-                "isFired":false 
+                "isFired": false 
             }           
         }).then((response) => { 
             expect(response.status).to.eq(200)
@@ -324,21 +341,20 @@ describe('employees section 2 - PARA EL PUT', () => { //opcion con describe apar
 describe('extras section', () => {
     
     it("GET extras", () => { //hecho por Guille
-        const array = //no es un simple array
+        const array = //no se puede acceder a este array normalmente pq no es que estamos haciendo 'const array = [a,b,c]', sino que es algo más raro.
             cy.request({
                 method: 'GET',
                 url: 'https://restool-sample-app.herokuapp.com/api/extra',
-                form:true           
+                form: true           
             }).then((response) => { 
                 expect(response.status).to.eq(200)
                 expect(response.body.items.name).to.not.be.null //para mi sin el .name
                 cy.log(JSON.stringify(response.body.items))
-                return response.body.items.id  //no es que devuelve simplemente un array de ids      
+                return response.body.items.id  //devuelve un array de ids efectivamente   
             });
 
         // cy.log(array)
         // cy.log(JSON.stringify(array))
-
 
         cy.visit("https://dsternlicht.github.io/RESTool/#/extras")
 
@@ -353,6 +369,7 @@ describe('extras section', () => {
 
                 idArray.push(val.text());
                 expect(array).to.deep.include(val.text) //Aliases: contain, includes, contains - son lo mismo  
+                // el 'to.deep' lo agregué yo
                 //SE ESTÁ HACIENDO ESTA LINEA? EN CYPRESS NI APARECE              
             })
         }).then(($lis) => {
@@ -421,8 +438,7 @@ describe('extras section', () => {
                 expect($lis).to.have.length.greaterThan(1)             
             }) */
 
-            
-            cy.wait(1000)    
+            // cy.wait(1000)    
             
             cy.request({
                 method: 'DELETE',
@@ -431,8 +447,8 @@ describe('extras section', () => {
                 expect(response.status).to.eq(200)        
             })   
 
-            cy.reload()
-            cy.wait(1000)
+            cy.reload().get('tbody') //hago el get para que haga retry hasta que aparezca el tbody y así no hago el wait de abajo.
+            // cy.wait(1000)
             
             cy.get('table > tbody > tr').should('not.contain', 'santi '+ uniqueSeed) //HAY ALGUNA MANERA DE NO HACERLO ASI POR SEPARADO???
             cy.get('table > tbody > tr').should('not.contain', response.body.id) //PQ ESTOY HACIENDO DOS VECES EL MISMO GET, MEDIO AL PEDO Y PIERDO TIEMPO.
@@ -478,7 +494,7 @@ describe('deads section', () => {
             cy.request({
                 method: 'GET',
                 url: 'https://restool-sample-app.herokuapp.com/api/dead',
-                form:true           
+                form: true           
             }).then((response) => { 
                 expect(response.status).to.eq(200)
                 expect(response.body.items.name).to.not.be.null //para mi sin el .name
@@ -545,13 +561,13 @@ describe('deads section', () => {
             cy.request({
                 method: 'GET',
                 url: 'https://restool-sample-app.herokuapp.com/api/dead/' + response.body.id,
-                form:true
+                form: true
             }).then((getResponse) => {
                 expect(getResponse.body).to.deep.equal(response.body)
             });
           
 
-            cy.wait(1000)    
+            // cy.wait(1000)    
             
             cy.request({
                 method: 'DELETE',
@@ -560,8 +576,8 @@ describe('deads section', () => {
                 expect(response.status).to.eq(200)        
             })   
 
-            cy.reload()
-            cy.wait(1000)
+            cy.reload().get('tbody') //hago el get para que haga retry hasta que aparezca el tbody y así no hago el wait de abajo.
+            // cy.wait(1000)
             
             cy.get('table > tbody > tr').should('not.contain', 'santi ' + uniqueSeed) //HAY ALGUNA MANERA DE NO HACERLO ASI POR SEPARADO???
             cy.get('table > tbody > tr').should('not.contain', response.body.id) //PQ ESTOY HACIENDO DOS VECES EL MISMO GET, MEDIO AL PEDO Y PIERDO TIEMPO.
@@ -569,7 +585,7 @@ describe('deads section', () => {
         });
     });
 
-    it.only('PUT - edit dead', () => {
+    it('PUT - edit dead', () => {
         
         const uniqueSeed = Date.now().toString(); 
 
