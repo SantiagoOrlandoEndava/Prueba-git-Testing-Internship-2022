@@ -1,7 +1,7 @@
 
 describe("characters section", () => {    
 
-    it.only("Test POST new character", () => { 
+    it("Test POST new character", () => { 
         const uniqueSeed = Date.now().toString();       
         cy.request({
             method: 'POST',
@@ -525,12 +525,20 @@ describe('deads section', () => {
         })
     })
 
-    it('POST - new dead', () => {
+    it.only('POST - new dead', () => {
         
         const uniqueSeed = Date.now().toString();   
 
         const deathReason = (Math.random() + 1).toString(36).substring(7); //genera un texto con 5 caracteres cualquiera
-//TRATAR DE HACER ALGO CON EL LENGTH DE LA RESPUESTA DEL GET, Y DESPUES DEL POST ESE LENGTH TIENE QUE SER UNA UNIDAD MAYOR.si no sale puedo hacerlo primero hardcodeado como que tenga length 6 (o el numero q sea)
+        
+        cy.request({ //hago un GET aca para sacar la cantidad de deads antes del POST.
+            method: 'GET',
+            url: 'https://restool-sample-app.herokuapp.com/api/dead',
+            form: true
+        }).then((getResponse) => {
+            cy.wrap(getResponse.body.items.length).as('largoGetInicial')
+        });
+
         cy.request({
             method: 'POST',
             url: 'https://restool-sample-app.herokuapp.com/api/dead',
@@ -556,19 +564,19 @@ describe('deads section', () => {
             }).then(($lis) => {
                 expect($lis).to.have.length.greaterThan(1)             
             })
-            
-            //puedo agregar un GET para ver que en el back tenga la misma info que acá
+         
+
+            //puedo agregar un GET para ver que en el back tenga la misma info que aca
             cy.request({
                 method: 'GET',
-                url: 'https://restool-sample-app.herokuapp.com/api/dead/' + response.body.id,
+                url: 'https://restool-sample-app.herokuapp.com/api/dead',
                 form: true
-            }).then((getResponse) => {
-                expect(getResponse.body).to.deep.equal(response.body)
+            }).then( function (getResponse) {
+                expect(getResponse.body.items).to.have.length(this.largoGetInicial + 1)
+                expect(getResponse.body.items[this.largoGetInicial]).to.deep.equal(response.body)
             });
           
 
-            // cy.wait(1000)    
-            
             cy.request({
                 method: 'DELETE',
                 url: 'https://restool-sample-app.herokuapp.com/api/dead/' + response.body.id
