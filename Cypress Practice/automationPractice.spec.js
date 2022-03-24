@@ -38,6 +38,12 @@ describe('automation practice website', () => {
 
         it('can create account', () => {
             cy.get('#email_create').type('mail_santiago@gmail.com'+number_for_email++)
+            //hay que hacer un tab o clikear afuera de la box para que aparezca el tilde verde de que esta ok.
+                //.click(-15, -16, { force: true }).parent().should('have.class', 'form-ok') //nose pq no anda el force:true
+            cy.get('.page-heading').click() //lo de antes me parecia mejor pero no anda, entonces hago que clickee en otro elemento y chau.
+            cy.get('#email_create').parent().should('have.class', 'form-ok')
+        
+            // click(-5, -6) es para que clickee 5 px a la izq y 6 para arriba desde la esquina izq sup de la caja.
 
             cy.get('#SubmitCreate').click()
         })
@@ -58,7 +64,7 @@ describe('automation practice website', () => {
 
 
             it('can check title field', () => {
-                cy.get('#id_gender1').click()
+                cy.get('#id_gender1').check().parent().should('have.class', 'checked')
             })
 
             it('first name field title is visible', () => {
@@ -67,7 +73,11 @@ describe('automation practice website', () => {
 
             it('can add first name', () => {
                 cy.get('#customer_firstname').type(firstName)
-                cy.get('#customer_firstname').should('have.value',firstName)
+                cy.get('#customer_firstname')
+                    .should('have.value', firstName)
+                    // .click(-5, -5, {force: true} ) //no anda pq no lo clickea por alguna razon
+                cy.get('.page-heading').click()
+                cy.get('#customer_firstname').parent().should('have.class', 'form-ok')
             })
 
             it('can add last name', () => {
@@ -83,17 +93,17 @@ describe('automation practice website', () => {
             })
 
             it('can add date of birth', () => {
-                cy.get('#days').select('4')
-                cy.get('#months').select('March')
-                cy.get('#years').select('2019')
+                cy.get('#days').select('4').siblings().should('contain', '4')
+                cy.get('#months').select('March').siblings().should('contain', 'March')
+                cy.get('#years').select('2019').siblings().should('contain', '2019')
             })
 
             it('can sign up for newsletter', () => {
-                cy.get('#newsletter').click()
+                cy.get('#newsletter').click().parent().should('have.class', 'checked')
             })
 
             it('can sign up for offers', () => {
-                cy.get('#uniform-optin').click()
+                cy.get('#uniform-optin').click().children().should('have.class', 'checked')
             })
 
             it('check address section has first and last name entered before', () => {
@@ -115,7 +125,7 @@ describe('automation practice website', () => {
             })
             
             it('can select state', () => {
-                cy.get('#id_state').select('Alaska')
+                cy.get('#id_state').select('Alaska').siblings().should('contain', 'Alaska')
             })
 
             it('can add zip or postal code', () => {
@@ -144,8 +154,10 @@ describe('automation practice website', () => {
 
             it('can submit form', () => {
                 cy.get('#submitAccount').click()
-            })
 
+                //como el mail ya existe no puede registrarse
+                cy.contains('An account using this email address has already been registered')
+            })
 
         })
 
