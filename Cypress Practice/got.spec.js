@@ -315,7 +315,7 @@ describe('characters section - test CRUD', () => {
 
 describe("employees section", () => {
     
-    it('test POST new employees', () => {
+    it('test POST new employees', () => { //TIENE COSITAS PARA VER
 
         const uniqueSeed = Date.now().toString();   
 
@@ -416,54 +416,6 @@ describe("employees section", () => {
         })
     })
 
-    it('test PUT editing employee', () => { //NO ANDA. opcion intentando hacer un before para el GET.
-        
-        //voy a intentar obtener el id con un GET
-        /*before(() => {  //NO ME DEJA PONER UN BEFORE EN UN IT. LO ARREGLO CON CONTEXTS?
-            var firstID = 0;
-            cy.request({
-                method: 'GET',
-                url: 'https://restool-sample-app.herokuapp.com/api/employee',
-                form:true           
-            }).then((response) => { 
-                expect(response.status).to.eq(200)
-                expect(response.body.items).to.not.be.null
-                
-                cy.wrap(response.body.items[0].id).as('id1')
-                firstID = response.body.items[0].id
-                cy.log(firstID)
-    
-                // cy.log(JSON.stringify(response.body.items))
-                // algo = response.body.items
-                // cy.log(algo)
-    
-                return response.body.items.id     
-            })
-        })
-        
-        cy.log(firstID)*/
-
-        const uniqueSeed = Date.now().toString(); 
-
-        /*cy.request({
-            method: 'PUT',
-            url: 'https://restool-sample-app.herokuapp.com/api/employee/'+'BZlnMLA2IuI7',
-            form:true,
-            body:{
-                "name":"santi "+ uniqueSeed,
-                "jobTitle":"RESTool creator 😎",
-                "isFired":false
-            }           
-        }).then((response) => { 
-            expect(response.status).to.eq(200)
-            expect(response.body).to.eq('ok')
-        });
-
-        cy.visit('https://dsternlicht.github.io/RESTool/#/employees?search=&page=1&limit=50')
-        cy.get('table > tbody > tr:nth-child(1) > td:nth-child(2) > span').should('have.text', 'santi '+ uniqueSeed)*/
-
-    });
-
     it('test PUT editing employee - OPTION 2', () => { //opcion anidando el PUT adentro del GET para obtener el ID del primer empleado. ES UNA BUENA PRACTICA ESO?
 
         const uniqueSeed = Date.now().toString(); 
@@ -498,67 +450,6 @@ describe("employees section", () => {
             cy.get('table > tbody > tr:nth-child(1) > td:nth-child(2) > span').should('have.text', 'santi '+ uniqueSeed)
 
         })
-    });
-
-});
-
-describe('employees section 2 - PARA EL PUT', () => { //opcion con describe aparte para poner el before con el alias que obtenemos del GET, y después usarlo en el it()
-
-    //obtengo el id con un GET
-
-    before(() => { //si no hago el describe y este before no se como usar el alias id1
-        
-        cy.request({
-            method: 'GET',
-            url: 'https://restool-sample-app.herokuapp.com/api/employee',
-            form: true           
-        }).then((response) => { 
-            expect(response.status).to.eq(200)
-            expect(response.body.items).to.not.be.null
-            
-            cy.wrap(response.body.items[0].id).as('id1')
-
-            return response.body.items.id     
-        })
-
-    })
-
-    const uniqueSeed = Date.now().toString(); 
-
-    it('PUT edit employee', function () { //hago funcion anonima y no arrow porque el alias no anda con arrow.
-
-        // cy.visit('https://dsternlicht.github.io/RESTool/#/employees?search=&page=1&limit=50')
-        expect(this.id1).to.eq('LtbefzswS3eC')
-
-        cy.request({
-            method: 'PUT',
-            url: 'https://restool-sample-app.herokuapp.com/api/employee/' + this.id1,
-            form: true,
-            body:{
-                "name": 'santi '+ uniqueSeed,
-                "jobTitle":"RESTool creator nooooo 😎",
-                "isFired": false 
-            }           
-        }).then((response) => { 
-            expect(response.status).to.eq(200)
-            expect(response.body).to.eq('ok')
-        });
-
-        cy.visit('https://dsternlicht.github.io/RESTool/#/employees?search=&page=1&limit=50')
-        
-        cy.get('table > tbody > tr:nth-child(1) > td:nth-child(2) > span').should('have.text', 'santi '+ uniqueSeed)
-        cy.get('table > tbody > tr:nth-child(1) > td:nth-child(4) > div').should('have.class', 'bool false') //y falla y está bien que falle
-        //PERO ES UN BUG DE LA PÁGINA O ES PROBLEMA DE CYPRESS?
-
-        cy.request({
-            method: 'GET',
-            url: 'https://restool-sample-app.herokuapp.com/api/employee/' + this.id1,
-            form:true           
-        }).then((response) => { 
-            expect(response.status).to.eq(200)
-            expect(response.body.isFired).to.eq('false') //esto da bien pq en el back si lo pone en false
-        })
-
     });
 
 });
@@ -602,7 +493,7 @@ describe('extras section', () => { //todos los its por separado - choto
         })
     })
 
-    it('POST - new extra', () => {
+    it('POST - new extra', () => { //TIENE COSITAS PARA VER
         const uniqueSeed = Date.now().toString();   
 
         cy.request({
@@ -839,7 +730,7 @@ describe.only('extras section - complete CRUD workflow', () => {
 
     });
 
-    it('PUT - edit extra', function () {
+    it('PUT - edit extra', function () { //TIENE COSITAS PARA VER
         
         const uniqueSeed = Date.now().toString();
         cy.wrap(uniqueSeed).as('newNameNumber')
@@ -918,7 +809,7 @@ describe('deads section', () => { //todos los its por separado - choto
         })
     })
 
-    it('POST - new dead', () => {
+    it('POST - new dead', () => { //TIENE COSITAS PARA VER
         
         const uniqueSeed = Date.now().toString();   
 
