@@ -308,14 +308,8 @@ describe('characters section - test DELETE', () => {
             expect(response.body).to.eq('ok')
         })
 
-        cy.request({
-            method: 'GET',
-            url: 'https://restool-sample-app.herokuapp.com/api/character/' + this.newId,
-            form: true
-        }).then((response) => { 
-            expect(response.status).to.eq(200) //medio choto pero la pagina esta devuelve 200 aunque hagamos un GET del personaje borrado.
-            //pero el body está vacio asiq chequeo con eso
-            expect(response.body).to.be.empty
+        cy.searchCharacterById(this.newId).then((character) => {
+            expect(character).to.be.empty
         })
     });
 
@@ -369,34 +363,23 @@ describe.only('characters section - test CRUD', () => {
 
 
     it('test GET - backend for all characters', () => {
-        cy.request({
-            method: 'GET',
-            url: 'https://restool-sample-app.herokuapp.com/api/character',
-            form: true           
-        }).then((response) => { 
-            expect(response.status).to.eq(200)
-            expect(response.body.items).to.not.be.null
-        })
+        cy.searchCharactersFromBackend()
     });
 
     it('test GET - backend for the created character', function () {
         cy.searchCharacterById(this.newId).then((character) => {
             expect(character).to.deep.equal(createdCharacter)
-        })
-        
+        }) 
     });
 
     it('test GET - frontend for all characters', () => {
         
-        const responseArray = 
-            cy.request({
-                method: 'GET',
-                url: 'https://restool-sample-app.herokuapp.com/api/character',
-                form: true           
-            }).then((response) => { 
-                expect(response.status).to.eq(200)
-                cy.wrap(response.body.items.length).as('numberOfCharactersBackend')
-            })
+        var charactersIdsBackend
+
+        cy.searchCharactersFromBackend().then((characters) => {
+            cy.wrap(characters.length).as('numberOfCharactersBackend')
+            charactersIdsBackend = Cypress._.map(characters, 'id')
+        })
 
         cy.visit("https://dsternlicht.github.io/RESTool/#/characters?search=")
         cy.viewport(1440,860); //depende de que tamano tenga anda bien o mal. Si comento esta linea (con 1920x1080) los 3 personajes del medio (jon sansa arya) no aparecen. Capaz es un bug nose.
@@ -412,28 +395,11 @@ describe.only('characters section - test CRUD', () => {
         cy.get('@numberOfCharactersBackend').then((num) => {
             cy.get('div>div:nth-child(3)>span').should('have.length', num)
         })
-
-        /*cy.get('div>div:nth-child(3)>span').each(($el, index, $lis) => {   
-            cy.wrap($el).then((val) => {
-                // cy.log(val.text())
-                expect(responseArray).contain(val.text)
-            })
-        }).then(($lis) => {
-            expect($lis).to.have.length.of.at.least(1)        
+        
+        cy.get('div>div:nth-child(2)>span').then(($array) => { //get characters id's spans from frontend
+            var charactersIdsFrontend = Cypress._.map($array, 'innerText') //get array of characters ids
+            expect(charactersIdsFrontend).to.deep.eq(charactersIdsBackend) //compare that the arrays of ids from front and back are the same.
         })
-////
-        let foundElement = false
-        cy.get('div>div:nth-child(3)>span').each(($el, index, $lis) => { 
-            // cy.log($el.text())          
-            if ($el.text() == response.body.name) {
-                cy.log('Element found')
-                foundElement = true
-                return
-            }                                 
-        }).then(($lis) => {
-            expect($lis).to.have.length.greaterThan(1)
-            assert.isTrue(foundElement);
-        })*/
 
     });
 

@@ -70,3 +70,16 @@ Cypress.Commands.add('searchCharacterById', (characterId) => {
         return response.body
     })
 })
+
+Cypress.Commands.add('searchCharactersFromBackend', () => {
+    cy.request({
+        method: 'GET',
+        url: 'https://restool-sample-app.herokuapp.com/api/character',
+        form: true           
+    }).then((response) => { 
+        expect(response.status).to.eq(200)
+        expect(response.body).to.not.be.null
+        return response.body.items
+    })
+})
+
