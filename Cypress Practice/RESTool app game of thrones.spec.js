@@ -1,5 +1,6 @@
+//functions in the commands file
 
-describe('characters section - test POST', () => {
+describe.only('characters section - test POST', () => {
         
     const uniqueSeed = Date.now().toString();
     let isAlive = true //si está en false falla algo porque en el front se pone true
@@ -9,256 +10,59 @@ describe('characters section - test POST', () => {
     let thumbnail = "test"
 
     it('test POST backend', () => {
+        cy.createCharacterPost(isAlive, location, name, realName, thumbnail).then((character) => {
+            cy.wrap(character.id).as('newId')
 
-        cy.request({
-            method: 'POST',
-            url: 'https://restool-sample-app.herokuapp.com/api/character',
-            form:true,
-            body:{
-                "isAlive": isAlive,
-                "location": location,
-                "name": name,
-                "realName": realName,
-                "thumbnail": thumbnail
-            }           
-        }).then(async function (response) { 
-            await expect(response.status).to.eq(200)
-            cy.wrap(response.body.id).as('newId')
+            expect(character.isAlive).to.eq("" + isAlive + "")
+            expect(character.location).to.eq(location)
+            expect(character.name).to.eq(name)
+            expect(character.realName).to.eq(realName)
+            expect(character.thumbnail).to.eq(thumbnail)
 
-            expect(response.body.isAlive).to.eq("" + isAlive + "")
-            expect(response.body.location).to.eq(location)
-            expect(response.body.name).to.eq(name)
-            expect(response.body.realName).to.eq(realName)
-            expect(response.body.thumbnail).to.eq(thumbnail)
-            // que tenga las properties.
+            // to have properties:
+            expect(character).to.have.ownPropertyDescriptor('id')
+            expect(character).to.have.ownPropertyDescriptor('isAlive')
+            expect(character).to.have.ownPropertyDescriptor('location')
+            expect(character).to.have.ownPropertyDescriptor('name')
+            expect(character).to.have.ownPropertyDescriptor('realName')
+            expect(character).to.have.ownPropertyDescriptor('thumbnail')
 
             // es suficiente que chequee con la respuesta o tendria que hacer un GET para chequear que me trajo todos estos campos con sus valores?
+            // eso ya lo estoy testeando en la parte del test del GET.
         })
     });
 
-    it('test POST in frontend with "isAlive" true', () => {
+    it.skip('test POST backend - negative case - one field missing', () => { //en postman esto devuelve 400. Aca no.  ??????????
+        cy.request({
+            method: 'POST',
+            url: 'https://restool-sample-app.herokuapp.com/api/character',
+            form:true,
+            body:{
+                "realName": realName,
+                "thumbnail": thumbnail
+            }           
+        }).then(async function (response) { 
+            await cy.wrap(response.body.id).as('newId') //no llega a hacer el wrap
+            cy.wait(1000)
+            expect(response.status).to.eq(400)
+            expect(response.body).to.contains('Bad Request')
+        })
+    });
+
+    it('test POST in frontend with "isAlive" true', function () {
         isAlive = true
-        cy.request({
-            method: 'POST',
-            url: 'https://restool-sample-app.herokuapp.com/api/character',
-            form:true,
-            body:{
-                "isAlive": isAlive,
-                "location": location,
-                "name": name,
-                "realName": realName,
-                "thumbnail": thumbnail
-            }           
-        }).then(async function (response) { 
-            await expect(response.status).to.eq(200)
-            cy.wrap(response.body.id).as('newId')
 
-            cy.viewport(1080,1080); //depende de que tamano tenga anda bien o mal. Si comento esta linea (con 1920x1080) los 3 personajes del medio (jon sansa arya) no aparecen. Capaz es un bug nose.
-            cy.visit("https://dsternlicht.github.io/RESTool/#/characters?search=")
-
-            cy.get('p.pagination-state').invoke('text').then(($text) => { //hago esto para guardar la catnt de items del 'showing x items'. y desp usarlo para esperar a que los encuentre
-                var totalItems = $text.split(' ')[1]
-                cy.wrap(totalItems).as('numberOfCharacters')
-            })
-            
-            // COMO HAGO PARA QUE SCROLEE HASTA QUE YA APAREZCAN TODOS LOS numberOfCharacters ??? 
-            
-            // cy.get('div>div:nth-child(3)>span').should('have.length', '@numberOfCharacters')  //lo hace para esperar que cargue los personajes que estan siempre  
-            // cy.get('div>div:nth-child(3)>span', {timeout:10000}).should( function (namesArray) { //hay alguna diferencia entre poner: namesArray o $namesArray ???
-            //     expect(namesArray).to.have.length(this.numberOfCharacters)
-            // }) 
-            
-            // let flag = true
-            // let arrayLength
-           /* while(flag) {
-                cy.scrollTo('bottom')
-                cy.wait(1000)
-                
-                cy.get('div>div:nth-child(3)>span').then(($array) => {
-                    arrayLength = $array.length
-                    cy.log('largo',arrayLength)
-                    cy.wrap(arrayLength).as('largoArray')
-                })
-                
-                cy.log('largo1 ', arrayLength)
-                cy.log('largo2 ', this.numberOfCharacters)
-                cy.log('largo3 ', this.largoArray) //todos me los trae como undefined
-                if( arrayLength === this.numberOfCharacters ){
-                    cy.log('inside if')
-                    flag = false
-                }
-            }*/
-            /*let i 
-            for (i = 0; i<5; i++) {
-                cy.scrollTo('bottom')
-                cy.wait(1000)
-
-                cy.get('div>div:nth-child(3)>span').then(($array) => {
-                    arrayLength = $array.length
-                    // cy.log('largo',arrayLength)
-                    cy.wrap(arrayLength).as('largoArray')
-
-                    cy.get('@numberOfCharacters').then( num => {
-                        // cy.log(num); //parece que anda
-    
-                        cy.log('arraylength', arrayLength)
-                        if(arrayLength == num) {
-                            cy.log('inside ifffffffffffffffffffffffffffffffffffffffff')
-                            i = 505;
-                        }
-                    })
-
-                })
-
-            }*/
-            cy.get('@numberOfCharacters').then( num => {
-                // cy.log(num); //parece que anda
-                cy.scrollToBottom(num)
-            })
-
-            cy.log('after for')
-
-            let foundElement = false
-            cy.get('div>div:nth-child(3)>span').each(($el, index, $lis) => { 
-                // cy.log($el.text())          
-                if ($el.text() == response.body.name) {
-                    cy.log('Element found')
-                    foundElement = true
-                    // expect(response.body.isAlive).to.eq("" + isAlive + "")
-                    return
-                }                                 
-            }).then(($lis) => {
-                expect($lis).to.have.length.greaterThan(1)
-                assert.isTrue(foundElement);
-            })
-
-            cy.get('.infinite-scroll-component .card').last().then( function (card) {
-                cy.wrap(card).contains('ID').siblings().should('have.text', this.newId)
-                cy.wrap(card).contains('Name').siblings().should('have.text', name)
-                cy.wrap(card).contains('Real Name').siblings().should('have.text', realName)
-                cy.wrap(card).contains('Location').siblings().should('have.text', location)
-                cy.wrap(card).contains('Alive').siblings().should('have.class', isAlive) //si está en false falla algo porque en el front se pone true
-                // el tema es que es algo de cypress pq con postman ese error no pasa. Pero al backend si se le envia bien el false.
-                cy.wrap(card).find('img').should('have.attr', 'src', thumbnail)
-            })
-
-        })
+        cy.verifyPostInFrontend(isAlive, location, name, realName, thumbnail)
     });
 
-    it('test POST in frontend with "isAlive" false', () => {
+    it.skip('test POST in frontend with "isAlive" false', () => {
         isAlive = false
-        cy.request({
-            method: 'POST',
-            url: 'https://restool-sample-app.herokuapp.com/api/character',
-            form:true,
-            body:{
-                "isAlive": isAlive,
-                "location": location,
-                "name": name,
-                "realName": realName,
-                "thumbnail": thumbnail
-            }           
-        }).then(async function (response) { 
-            await expect(response.status).to.eq(200)
-            cy.wrap(response.body.id).as('newId')
-
-            cy.viewport(1080,1080); //depende de que tamano tenga anda bien o mal. Si comento esta linea (con 1920x1080) los 3 personajes del medio (jon sansa arya) no aparecen. Capaz es un bug nose.
-            cy.visit("https://dsternlicht.github.io/RESTool/#/characters?search=")
-
-            cy.get('p.pagination-state').invoke('text').then(($text) => { //hago esto para guardar la catnt de items del 'showing x items'. y desp usarlo para esperar a que los encuentre
-                var totalItems = $text.split(' ')[1]
-                cy.wrap(totalItems).as('numberOfCharacters')
-            })
-            
-            // COMO HAGO PARA QUE SCROLEE HASTA QUE YA APAREZCAN TODOS LOS numberOfCharacters ??? 
-            
-            // cy.get('div>div:nth-child(3)>span').should('have.length', '@numberOfCharacters')  //lo hace para esperar que cargue los personajes que estan siempre  
-            // cy.get('div>div:nth-child(3)>span', {timeout:10000}).should( function (namesArray) { //hay alguna diferencia entre poner: namesArray o $namesArray ???
-            //     expect(namesArray).to.have.length(this.numberOfCharacters)
-            // }) 
-            
-            // let flag = true
-            // let arrayLength
-           /* while(flag) {
-                cy.scrollTo('bottom')
-                cy.wait(1000)
-                
-                cy.get('div>div:nth-child(3)>span').then(($array) => {
-                    arrayLength = $array.length
-                    cy.log('largo',arrayLength)
-                    cy.wrap(arrayLength).as('largoArray')
-                })
-                
-                cy.log('largo1 ', arrayLength)
-                cy.log('largo2 ', this.numberOfCharacters)
-                cy.log('largo3 ', this.largoArray) //todos me los trae como undefined
-                if( arrayLength === this.numberOfCharacters ){
-                    cy.log('inside if')
-                    flag = false
-                }
-            }*/
-            /*let i 
-            for (i = 0; i<5; i++) {
-                cy.scrollTo('bottom')
-                cy.wait(1000)
-
-                cy.get('div>div:nth-child(3)>span').then(($array) => {
-                    arrayLength = $array.length
-                    // cy.log('largo',arrayLength)
-                    cy.wrap(arrayLength).as('largoArray')
-
-                    cy.get('@numberOfCharacters').then( num => {
-                        // cy.log(num); //parece que anda
-    
-                        cy.log('arraylength', arrayLength)
-                        if(arrayLength == num) {
-                            cy.log('inside ifffffffffffffffffffffffffffffffffffffffff')
-                            i = 505;
-                        }
-                    })
-
-                })
-
-            }*/
-            cy.get('@numberOfCharacters').then( num => {
-                // cy.log(num); //parece que anda
-                cy.scrollToBottom(num)
-            })
-
-            cy.log('after for')
-
-            let foundElement = false
-            cy.get('div>div:nth-child(3)>span').each(($el, index, $lis) => { 
-                // cy.log($el.text())          
-                if ($el.text() == response.body.name) {
-                    cy.log('Element found')
-                    foundElement = true
-                    // expect(response.body.isAlive).to.eq("" + isAlive + "")
-                    return
-                }                                 
-            }).then(($lis) => {
-                expect($lis).to.have.length.greaterThan(1)
-                assert.isTrue(foundElement);
-            })
-
-            cy.get('.infinite-scroll-component .card').last().then( function (card) {
-                cy.wrap(card).contains('ID').siblings().should('have.text', this.newId)
-                cy.wrap(card).contains('Name').siblings().should('have.text', name)
-                cy.wrap(card).contains('Real Name').siblings().should('have.text', realName)
-                cy.wrap(card).contains('Location').siblings().should('have.text', location)
-                cy.wrap(card).contains('Alive').siblings().should('have.class', isAlive) //si está en false falla algo porque en el front se pone true
-                // el tema es que es algo de cypress pq con postman ese error no pasa. Pero al backend si se le envia bien el false.
-                cy.wrap(card).find('img').should('have.attr', 'src', thumbnail)
-            })
-
-        })
+        
+        cy.verifyPostInFrontend(isAlive, location, name, realName, thumbnail)
     });
     
     afterEach(function () {
-        cy.request({
-            method: 'DELETE',
-            url: 'https://restool-sample-app.herokuapp.com/api/character/' + this.newId            
-        })  
+        cy.deleteCharacter(this.newId)
     });
 
 });
@@ -273,19 +77,8 @@ describe('characters section - test DELETE', () => {
 
     before( function () {
         
-        cy.request({
-            method: 'POST',
-            url: 'https://restool-sample-app.herokuapp.com/api/character',
-            form:true,
-            body:{
-                "isAlive": isAlive,
-                "location": location,
-                "name": name,
-                "realName": realName,
-                "thumbnail": thumbnail
-            }           
-        }).then((response) => {
-            cy.wrap(response.body.id).as('newId')
+        cy.createCharacterPost(isAlive, location, name, realName, thumbnail).then((character) => { 
+            cy.wrap(character.id).as('newId')
         })
 
         //pongo este DELETE en el before para que cada it pueda testear a partir de este. 
@@ -293,10 +86,7 @@ describe('characters section - test DELETE', () => {
         // o juntar los dos it en uno que me parece ponerle mucha responsabilidad a 1 solo it.
         // VER-PENSAR-PREGUNTAR !!!!!!!!!
         cy.get('@newId').then((idCreated) => {
-            cy.request({ 
-                method: 'DELETE',
-                url: 'https://restool-sample-app.herokuapp.com/api/character/' + idCreated
-            }).then((response) => {
+            cy.deleteCharacter(idCreated).then((response) => {
                 cy.wrap(response).as('deleteResponse')
             })
         })
@@ -332,7 +122,7 @@ describe('characters section - test DELETE', () => {
 
 });
 
-describe.only('characters section - test CRUD', () => {
+describe('characters section - test CRUD', () => {
     let createdCharacter //está bien el 'let', no necesariamente tiene que ser 'var'
     
     const uniqueSeed = Date.now().toString();
@@ -343,21 +133,9 @@ describe.only('characters section - test CRUD', () => {
     let thumbnail = "test"
 
     before(() => {
-        
-        cy.request({
-            method: 'POST',
-            url: 'https://restool-sample-app.herokuapp.com/api/character',
-            form:true,
-            body:{
-                "isAlive": isAlive,
-                "location": location,
-                "name": name,
-                "realName": realName,
-                "thumbnail": thumbnail
-            }           
-        }).then((response) => {
-            cy.wrap(response.body.id).as('newId')
-            createdCharacter = response.body
+        cy.createCharacterPost(isAlive, location, name, realName, thumbnail).then((character) => { 
+            cy.wrap(character.id).as('newId')
+            createdCharacter = character
         })
     });
 
@@ -462,10 +240,7 @@ describe.only('characters section - test CRUD', () => {
     });
 
     after( function () {
-        cy.request({
-            method: 'DELETE',
-            url: 'https://restool-sample-app.herokuapp.com/api/character/' + this.newId            
-        })
+        cy.deleteCharacter(this.newId)
     });
 
 });
