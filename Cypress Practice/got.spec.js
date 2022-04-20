@@ -372,7 +372,7 @@ describe("employees section", () => {
         });
     });
 
-    it("Test GET employees", () => { 
+    it.only("Test GET employees", () => { 
         var algo = []
         const responseArray = 
             cy.request({
@@ -383,10 +383,10 @@ describe("employees section", () => {
                 expect(response.status).to.eq(200)
                 expect(response.body.items).to.not.be.null 
 
-                cy.log(JSON.stringify(response.body.items))
+                cy.log('1',JSON.stringify(response.body.items))
                 algo = response.body.items
-                cy.log(algo)
-
+                cy.log('2',algo)
+                cy.log('aver', JSON.stringify(response.body.items.id))
                 return response.body.items.id     
             })
 
@@ -603,7 +603,7 @@ describe('extras section', () => { //todos los its por separado - choto
 
 });
 
-describe.only('extras section - complete CRUD workflow', () => {
+describe('extras section - complete CRUD workflow', () => {
     var itemCreated
     it("GET extras", function () { //hecho por Guille
         const array = //no se puede acceder a este array normalmente pq no es que estamos haciendo 'const array = [a,b,c]', sino que es algo más raro.

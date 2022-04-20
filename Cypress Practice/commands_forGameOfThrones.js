@@ -27,36 +27,9 @@
 
 Cypress.Commands.add('scrollToBottom', (num) => {
     var i 
-    var arrayLength
-    var flag = 5
-
     for (i = 0; i<4; i++) { //no puedo cortar este for, asi que no sirve mucho la funcion asi como está.
-        // cy.log('i ',i)
         cy.scrollTo('bottom')
         cy.wait(1000)
-
-        cy.get('div>div:nth-child(3)>span').then(($array) => {
-            arrayLength = $array.length
-            // cy.log('largo',arrayLength)
-            // cy.wrap(arrayLength).as('largoArray')
-
-            // cy.log('arraylength', arrayLength)
-            // cy.log('num', num)
-            if(arrayLength == num) {
-                cy.log('inside ifffffffffffffffffffffffffffffffffffffffff')
-                i = 505;
-                // cy.log('i2: ',i)
-                flag = 8
-                return false;
-            }
-
-        })
-
-        // cy.log('flag', flag)
-        if(flag == 8){
-            break;
-        }
-       
     }
 })
 
